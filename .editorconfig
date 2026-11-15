@@ -1,0 +1,20 @@
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+indent_style = space
+indent_size = 4
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+# cmd.exe mis-parses labels and the last line of a batch file when it uses bare LF.
+[*.bat]
+end_of_line = crlf
+
+[*.md]
+# Trailing spaces are meaningful in Markdown (hard line break).
+trim_trailing_whitespace = false
+
+[*.{yml,yaml,json}]
+indent_size = 2

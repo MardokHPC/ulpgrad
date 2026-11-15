@@ -1,0 +1,174 @@
+{
+  "schema": 1,
+  "generated_by": "tools/measure_bounds.cpp",
+  "date": "Nov 15 2026",
+  "machine": {
+    "os": "Windows",
+    "arch": "x64",
+    "cpu": "Intel64 Family 6 Model 158 Stepping 10, GenuineIntel",
+    "compiler": "MSVC 35229"
+  },
+  "functions": [
+    {
+      "name": "exp",
+      "reference": "mpmath 1.4.1 at 40 decimal digits, direct round-to-nearest-even to float32",
+      "seed": "0x5EED0003",
+      "points": 9334,
+      "measured_points": 9331,
+      "nan_inputs": 3,
+      "nan_outputs": 0,
+      "nan_mismatches": 0,
+      "max_ulp": 1,
+      "worst_input": "0x41907302",
+      "exactly_rounded_pct": 94.81,
+      "buckets": [
+        {"range": "[0, 1)", "max_ulp": 1, "points": 672, "exactly_rounded_pct": 98.66, "worst_input": "0xBE3BDDC0"},
+        {"range": "[1, 2)", "max_ulp": 1, "points": 176, "exactly_rounded_pct": 92.61, "worst_input": "0x3FEE0D5E"},
+        {"range": "[2, 4)", "max_ulp": 1, "points": 337, "exactly_rounded_pct": 94.07, "worst_input": "0x4075EA01"},
+        {"range": "[4, 8)", "max_ulp": 1, "points": 696, "exactly_rounded_pct": 93.53, "worst_input": "0xC08DF538"},
+        {"range": "[8, 16)", "max_ulp": 1, "points": 1310, "exactly_rounded_pct": 95.42, "worst_input": "0xC17A6EE1"},
+        {"range": "[16, 32)", "max_ulp": 1, "points": 2529, "exactly_rounded_pct": 94.66, "worst_input": "0x41907302"},
+        {"range": "[32, 64)", "max_ulp": 1, "points": 1790, "exactly_rounded_pct": 94.53, "worst_input": "0xC2252957"},
+        {"range": "[64, inf)", "max_ulp": 1, "points": 1821, "exactly_rounded_pct": 94.29, "worst_input": "0x42AAB20C"}
+      ]
+    },
+    {
+      "name": "exp2",
+      "reference": "mpmath 1.4.1 at 40 decimal digits, direct round-to-nearest-even to float32",
+      "seed": "0x5EED0003",
+      "points": 7920,
+      "measured_points": 7917,
+      "nan_inputs": 3,
+      "nan_outputs": 0,
+      "nan_mismatches": 0,
+      "max_ulp": 1,
+      "worst_input": "0x415AE341",
+      "exactly_rounded_pct": 94.16,
+      "buckets": [
+        {"range": "[0, 1)", "max_ulp": 1, "points": 709, "exactly_rounded_pct": 98.73, "worst_input": "0xBEE878D0"},
+        {"range": "[1, 2)", "max_ulp": 1, "points": 198, "exactly_rounded_pct": 95.96, "worst_input": "0xBFAEFBC8"},
+        {"range": "[2, 4)", "max_ulp": 1, "points": 419, "exactly_rounded_pct": 95.23, "worst_input": "0x401135FC"},
+        {"range": "[4, 8)", "max_ulp": 1, "points": 769, "exactly_rounded_pct": 95.19, "worst_input": "0xC08C43C1"},
+        {"range": "[8, 16)", "max_ulp": 1, "points": 1600, "exactly_rounded_pct": 94.44, "worst_input": "0x415AE341"},
+        {"range": "[16, 32)", "max_ulp": 1, "points": 1177, "exactly_rounded_pct": 92.44, "worst_input": "0xC19900A4"},
+        {"range": "[32, 64)", "max_ulp": 1, "points": 903, "exactly_rounded_pct": 93.13, "worst_input": "0xC241CFA6"},
+        {"range": "[64, inf)", "max_ulp": 1, "points": 2142, "exactly_rounded_pct": 93.09, "worst_input": "0x428CF9D4"}
+      ]
+    },
+    {
+      "name": "log",
+      "reference": "mpmath 1.4.1 at 40 decimal digits, direct round-to-nearest-even to float32",
+      "seed": "0x5EED0003",
+      "points": 8213,
+      "measured_points": 7969,
+      "nan_inputs": 3,
+      "nan_outputs": 241,
+      "nan_mismatches": 0,
+      "max_ulp": 1,
+      "worst_input": "0x3F5A5666",
+      "exactly_rounded_pct": 94.47,
+      "buckets": [
+        {"range": "[0, 1)", "max_ulp": 1, "points": 1367, "exactly_rounded_pct": 92.32, "worst_input": "0x3F5A5666"},
+        {"range": "[1, 2)", "max_ulp": 1, "points": 654, "exactly_rounded_pct": 80.12, "worst_input": "0x3FED5B46"},
+        {"range": "[2, 4)", "max_ulp": 1, "points": 920, "exactly_rounded_pct": 90.98, "worst_input": "0x4061700C"},
+        {"range": "[4, 8)", "max_ulp": 1, "points": 1901, "exactly_rounded_pct": 93.63, "worst_input": "0x40C10ABC"},
+        {"range": "[8, 16)", "max_ulp": 0, "points": 7, "exactly_rounded_pct": 100.00, "worst_input": "0x00000000"},
+        {"range": "[16, 32)", "max_ulp": 0, "points": 11, "exactly_rounded_pct": 100.00, "worst_input": "0x00000000"},
+        {"range": "[32, 64)", "max_ulp": 0, "points": 6, "exactly_rounded_pct": 100.00, "worst_input": "0x00000000"},
+        {"range": "[64, inf)", "max_ulp": 1, "points": 3103, "exactly_rounded_pct": 99.94, "worst_input": "0x713A959E"}
+      ]
+    },
+    {
+      "name": "log1p",
+      "reference": "mpmath 1.4.1 at 40 decimal digits, direct round-to-nearest-even to float32",
+      "seed": "0x5EED0003",
+      "points": 7012,
+      "measured_points": 7005,
+      "nan_inputs": 3,
+      "nan_outputs": 4,
+      "nan_mismatches": 0,
+      "max_ulp": 1,
+      "worst_input": "0xBF29B6E2",
+      "exactly_rounded_pct": 92.93,
+      "buckets": [
+        {"range": "[0, 1)", "max_ulp": 1, "points": 4613, "exactly_rounded_pct": 90.70, "worst_input": "0xBF29B6E2"},
+        {"range": "[1, 2)", "max_ulp": 1, "points": 43, "exactly_rounded_pct": 90.70, "worst_input": "0x3FE75B5A"},
+        {"range": "[2, 4)", "max_ulp": 1, "points": 75, "exactly_rounded_pct": 97.33, "worst_input": "0x405FC072"},
+        {"range": "[4, 8)", "max_ulp": 1, "points": 149, "exactly_rounded_pct": 94.63, "worst_input": "0x409C165E"},
+        {"range": "[8, 16)", "max_ulp": 1, "points": 279, "exactly_rounded_pct": 98.57, "worst_input": "0x411C9625"},
+        {"range": "[16, 32)", "max_ulp": 1, "points": 577, "exactly_rounded_pct": 96.88, "worst_input": "0x418E6C44"},
+        {"range": "[32, 64)", "max_ulp": 1, "points": 656, "exactly_rounded_pct": 95.58, "worst_input": "0x421A39D8"},
+        {"range": "[64, inf)", "max_ulp": 1, "points": 613, "exactly_rounded_pct": 99.84, "worst_input": "0x45286F52"}
+      ]
+    },
+    {
+      "name": "log2",
+      "reference": "mpmath 1.4.1 at 40 decimal digits, direct round-to-nearest-even to float32",
+      "seed": "0x5EED0003",
+      "points": 8213,
+      "measured_points": 7969,
+      "nan_inputs": 3,
+      "nan_outputs": 241,
+      "nan_mismatches": 0,
+      "max_ulp": 1,
+      "worst_input": "0x3F5A5666",
+      "exactly_rounded_pct": 93.84,
+      "buckets": [
+        {"range": "[0, 1)", "max_ulp": 1, "points": 1367, "exactly_rounded_pct": 89.98, "worst_input": "0x3F5A5666"},
+        {"range": "[1, 2)", "max_ulp": 1, "points": 654, "exactly_rounded_pct": 71.56, "worst_input": "0x3FED5B46"},
+        {"range": "[2, 4)", "max_ulp": 1, "points": 920, "exactly_rounded_pct": 91.09, "worst_input": "0x406BF608"},
+        {"range": "[4, 8)", "max_ulp": 1, "points": 1901, "exactly_rounded_pct": 95.84, "worst_input": "0x40DECE5E"},
+        {"range": "[8, 16)", "max_ulp": 1, "points": 7, "exactly_rounded_pct": 85.71, "worst_input": "0x41400000"},
+        {"range": "[16, 32)", "max_ulp": 0, "points": 11, "exactly_rounded_pct": 100.00, "worst_input": "0x00000000"},
+        {"range": "[32, 64)", "max_ulp": 0, "points": 6, "exactly_rounded_pct": 100.00, "worst_input": "0x00000000"},
+        {"range": "[64, inf)", "max_ulp": 1, "points": 3103, "exactly_rounded_pct": 99.81, "worst_input": "0x703EC124"}
+      ]
+    },
+    {
+      "name": "rsqrt",
+      "reference": "mpmath 1.4.1 at 40 decimal digits, direct round-to-nearest-even to float32",
+      "seed": "0x5EED0003",
+      "points": 8073,
+      "measured_points": 7829,
+      "nan_inputs": 3,
+      "nan_outputs": 241,
+      "nan_mismatches": 0,
+      "max_ulp": 1,
+      "worst_input": "0x4275B3EF",
+      "exactly_rounded_pct": 88.22,
+      "buckets": [
+        {"range": "[0, 1)", "max_ulp": 1, "points": 1077, "exactly_rounded_pct": 92.01, "worst_input": "0x3DFE57E4"},
+        {"range": "[1, 2)", "max_ulp": 1, "points": 84, "exactly_rounded_pct": 90.48, "worst_input": "0x3F895214"},
+        {"range": "[2, 4)", "max_ulp": 1, "points": 82, "exactly_rounded_pct": 86.59, "worst_input": "0x4049DFE1"},
+        {"range": "[4, 8)", "max_ulp": 1, "points": 168, "exactly_rounded_pct": 85.12, "worst_input": "0x40B4F438"},
+        {"range": "[8, 16)", "max_ulp": 1, "points": 254, "exactly_rounded_pct": 92.52, "worst_input": "0x41431425"},
+        {"range": "[16, 32)", "max_ulp": 1, "points": 554, "exactly_rounded_pct": 85.02, "worst_input": "0x41E11591"},
+        {"range": "[32, 64)", "max_ulp": 1, "points": 1119, "exactly_rounded_pct": 88.65, "worst_input": "0x4275B3EF"},
+        {"range": "[64, inf)", "max_ulp": 1, "points": 4491, "exactly_rounded_pct": 87.46, "worst_input": "0x42AD34FE"}
+      ]
+    },
+    {
+      "name": "tanh",
+      "reference": "mpmath 1.4.1 at 40 decimal digits, direct round-to-nearest-even to float32",
+      "seed": "0x5EED0003",
+      "points": 7233,
+      "measured_points": 7230,
+      "nan_inputs": 3,
+      "nan_outputs": 0,
+      "nan_mismatches": 0,
+      "max_ulp": 2,
+      "worst_input": "0xBF01DF0C",
+      "exactly_rounded_pct": 88.02,
+      "buckets": [
+        {"range": "[0, 1)", "max_ulp": 2, "points": 5581, "exactly_rounded_pct": 91.74, "worst_input": "0xBF01DF0C"},
+        {"range": "[1, 2)", "max_ulp": 2, "points": 1199, "exactly_rounded_pct": 69.14, "worst_input": "0xBF9BD0F7"},
+        {"range": "[2, 4)", "max_ulp": 1, "points": 20, "exactly_rounded_pct": 80.00, "worst_input": "0xC01D5BC4"},
+        {"range": "[4, 8)", "max_ulp": 1, "points": 28, "exactly_rounded_pct": 75.00, "worst_input": "0xC08D5816"},
+        {"range": "[8, 16)", "max_ulp": 2, "points": 64, "exactly_rounded_pct": 62.50, "worst_input": "0x4106BA29"},
+        {"range": "[16, 32)", "max_ulp": 0, "points": 19, "exactly_rounded_pct": 100.00, "worst_input": "0x00000000"},
+        {"range": "[32, 64)", "max_ulp": 0, "points": 4, "exactly_rounded_pct": 100.00, "worst_input": "0x00000000"},
+        {"range": "[64, inf)", "max_ulp": 0, "points": 315, "exactly_rounded_pct": 100.00, "worst_input": "0x00000000"}
+      ]
+    }
+  ]
+}

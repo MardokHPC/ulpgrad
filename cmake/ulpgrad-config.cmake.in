@@ -1,0 +1,11 @@
+@PACKAGE_INIT@
+
+# Provides ulpgrad::ulpgrad (INTERFACE, header-only). The include directory and
+# the C++17 requirement travel with the target; there is nothing to link.
+#
+# No find_dependency() here on purpose: the library has no dependency at all,
+# not even the CUDA runtime. A consumer who does not use CUDA must not be asked
+# to install a toolkit to include one header.
+include("${CMAKE_CURRENT_LIST_DIR}/ulpgrad-targets.cmake")
+
+check_required_components(ulpgrad)

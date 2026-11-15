@@ -1,0 +1,11 @@
+---
+Language: Cpp
+BasedOnStyle: LLVM
+Standard: c++17
+IndentWidth: 4
+TabWidth: 4
+UseTab: Never
+ColumnLimit: 100
+# Include order is hand-maintained (project, then system/CUDA, then STL). An
+# automatic sorter would silently violate that convention.
+SortIncludes: false

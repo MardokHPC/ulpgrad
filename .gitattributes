@@ -1,0 +1,40 @@
+# Normalise text on commit, restore native line endings on checkout.
+* text=auto eol=lf
+
+# One extension per line, so a new file type is a one-line change and the intent is explicit.
+*.h      text eol=lf
+*.cpp    text eol=lf
+*.cu     text eol=lf
+*.cuh    text eol=lf
+*.md     text eol=lf
+*.txt    text eol=lf
+*.cmake  text eol=lf
+CMakeLists.txt text eol=lf
+*.yml    text eol=lf
+*.yaml   text eol=lf
+*.json   text eol=lf
+*.py     text eol=lf
+*.csv    text eol=lf
+LICENSE  text eol=lf
+
+# Batch files must ship CRLF: cmd.exe mis-parses labels when the file uses bare LF.
+*.bat    text eol=crlf
+
+# Binary artifacts, in case one is ever added by accident.
+*.bin    binary
+*.exe    binary
+*.dll    binary
+*.lib    binary
+*.obj    binary
+*.png    binary
+*.zip    binary
+*.tgz    binary
+
+# --- GitHub language bar ---
+# The bar should describe the library, not the evidence around it. Reference data and
+# generated tables are not source; the M0 spike is a measurement, not part of the API.
+docs/**            linguist-documentation
+data/**            linguist-generated
+experiments/**     linguist-documentation
+*.bat              linguist-detectable=false
+tools/**/*.py      linguist-detectable=false

@@ -1,0 +1,123 @@
+# What runs where.
+#
+# Three active jobs:
+#   host-only      — the gate: configure, build and ctest with GCC on Linux and MSVC on
+#                    Windows. Fast feedback (~1 min) and the one that must stay green.
+#   device-compile — compiles the public headers with nvcc and checks host/device parity.
+#                    Exists because the host suites structurally cannot catch a
+#                    `__device__`-only intrinsic reached from a `__host__ __device__`
+#                    function: that bug shipped once and this is the answer to it.
+#
+# No caching, by choice. Toolkit caches go stale across CUDA versions often enough that a
+# slower honest job is cheaper than a fast lying one. If caching returns, it comes back with
+# a measured justification.
+
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CMAKE_BUILD_TYPE: Release
+
+jobs:
+  host-only:
+    name: host-only (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        # Explicit entries, not a cross product: each one exists for a reason and the reason is here.
+        include:
+          # Linux: the documented floor for the compilers we support (GCC 9+ ships with 22.04).
+          - os: ubuntu-22.04
+          # Windows: MSVC. Installed by the toolchain action below, not assumed to be on the image.
+          - os: windows-2022
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Setup MSVC dev cmd (Windows only)
+        if: runner.os == 'Windows'
+        uses: ilammy/msvc-dev-cmd@v1
+
+      - name: Check toolchain (ninja + compiler)
+        shell: bash
+        run: |
+          cmake --version
+          ninja --version
+
+      - name: Configure (Ninja, tests ON)
+        run: >
+          cmake -S . -B build -G Ninja
+          -DCMAKE_BUILD_TYPE=${{ env.CMAKE_BUILD_TYPE }}
+          -DULPGRAD_BUILD_TESTS=ON
+
+      - name: Build
+        run: cmake --build build
+
+      - name: Run ctest
+        run: ctest --test-dir build --output-on-failure
+
+      - name: Install to a scratch prefix
+        run: cmake --install build --prefix build/install
+
+      - name: Upload headers artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ulpgrad-headers-${{ matrix.os }}
+          path: include/ulpgrad/
+          if-no-files-found: error
+
+  device-compile:
+    # The host suites cannot see the failure this job exists for: a `__device__`-only
+    # intrinsic selected in a `__host__ __device__` function compiles everywhere except
+    # where the header is meant to run. That bug shipped once, for two milestones.
+    name: device-compile (ubuntu-22.04, CUDA 11.8)
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Setup CUDA 11.8
+        uses: Jimver/cuda-toolkit@v0.2.36
+        with:
+          cuda: "11.8.0"
+          method: network
+
+      - name: Check toolchain (nvcc)
+        run: nvcc --version
+
+      - name: Compile the public headers as device code
+        run: >
+          nvcc -arch=sm_70 -std=c++17 -O2 -I include
+          -o build_exp_smoke tests/device/exp_smoke.cu
+
+      - name: Run the device check (skips without a GPU)
+        # Exit code 77 is the suite's "no device" answer, the same convention the
+        # host-only suites use for their device-dependent cases. The golden
+        # reference directory is an argument, not a compiled-in path: the check
+        # reads every point of the seven CSVs and compares the device against the
+        # host bit for bit and against the reference within the declared bound.
+        run: |
+          set +e
+          ./build_exp_smoke data/reference
+          rc=$?
+          set -e
+          echo "device check exit code: $rc"
+          if [ "$rc" -ne 0 ] && [ "$rc" -ne 77 ]; then
+            exit "$rc"
+          fi
+

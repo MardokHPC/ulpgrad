@@ -1,0 +1,5 @@
+uniform 0 1000000
+structural 1000000 2032
+borders 1002032 2824
+subnormal 1004856 5000
+specials 1009856 10
