@@ -26,7 +26,7 @@ a sentence in a README.
 | You want | Use |
 |---|---|
 | IEEE correctness and published derivations, GPU only | `expf` / `logf` from libdevice |
-| Maximum speed, error that grows with the argument | `__expf` (`2 + floor(1.16·\|x\|)` ULP, 57 measured at `\|x\| = 32`) |
+| Maximum speed, error that grows with the argument | `__expf` (`2 + floor(1.16·\|x\|)` ULP, up to 57 in `[32, 64)`) |
 | **A bound that still holds under CUDA's default `-ftz=true`, identical on CPU and GPU** | **ulpgrad** |
 | Correctly rounded (0.5 ULP) everywhere | `double` + cast, or MPFR on the CPU |
 | A complete vectorised CPU/GPU math library | SLEEF / LLVM libmvec |
