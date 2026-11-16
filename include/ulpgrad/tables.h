@@ -107,6 +107,38 @@ constexpr ErrorBound rsqrt_error_bounds[] = {
 
 constexpr int rsqrt_error_bounds_count = 8;
 
+// Declared bound for sigmoid, 6,992 points, 76.36% exactly rounded.
+constexpr int sigmoid_max_ulp = 2;
+
+constexpr ErrorBound sigmoid_error_bounds[] = {
+    {"[0, 1)", 1, 2465LL},  // 94.20% exactly rounded
+    {"[1, 2)", 1, 206LL},  // 68.45% exactly rounded
+    {"[2, 4)", 1, 395LL},  // 60.25% exactly rounded
+    {"[4, 8)", 2, 791LL},  // 55.50% exactly rounded
+    {"[8, 16)", 2, 1598LL},  // 54.26% exactly rounded
+    {"[16, 32)", 1, 445LL},  // 54.83% exactly rounded
+    {"[32, 64)", 0, 8LL},  // 100.00% exactly rounded
+    {"[64, inf)", 1, 1084LL},  // 99.63% exactly rounded
+};
+
+constexpr int sigmoid_error_bounds_count = 8;
+
+// Declared bound for silu, 6,992 points, 80.01% exactly rounded.
+constexpr int silu_max_ulp = 2;
+
+constexpr ErrorBound silu_error_bounds[] = {
+    {"[0, 1)", 2, 2465LL},  // 86.09% exactly rounded
+    {"[1, 2)", 1, 206LL},  // 73.30% exactly rounded
+    {"[2, 4)", 1, 395LL},  // 67.34% exactly rounded
+    {"[4, 8)", 1, 791LL},  // 68.02% exactly rounded
+    {"[8, 16)", 1, 1598LL},  // 67.27% exactly rounded
+    {"[16, 32)", 2, 445LL},  // 78.88% exactly rounded
+    {"[32, 64)", 0, 8LL},  // 100.00% exactly rounded
+    {"[64, inf)", 1, 1084LL},  // 99.91% exactly rounded
+};
+
+constexpr int silu_error_bounds_count = 8;
+
 // Declared bound for tanh, 7,230 points, 88.02% exactly rounded.
 constexpr int tanh_max_ulp = 2;
 

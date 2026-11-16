@@ -38,6 +38,8 @@
 #include <ulpgrad/exp.h>
 #include <ulpgrad/log.h>
 #include <ulpgrad/rsqrt.h>
+#include <ulpgrad/sigmoid.h>
+#include <ulpgrad/silu.h>
 #include <ulpgrad/tables.h>
 #include <ulpgrad/tanh.h>
 #include <ulpgrad/detail/bits.h>
@@ -52,7 +54,7 @@ namespace {
 // One output slot per function. The order of `kFunctions` is the order of the
 // kernel's assignments, and `kFunctionCount` is what keeps the two in step: a
 // slot without a name would make the report blame the wrong function.
-constexpr int kFunctionCount = 7;
+constexpr int kFunctionCount = 9;
 
 using Evaluate = float (*)(float);
 
@@ -72,6 +74,8 @@ constexpr Function kFunctions[kFunctionCount] = {
     {"log2", [](float x) { return ulpgrad::log2(x); }, ulpgrad::log2_max_ulp},
     {"log1p", [](float x) { return ulpgrad::log1p(x); }, ulpgrad::log1p_max_ulp},
     {"rsqrt", [](float x) { return ulpgrad::rsqrt(x); }, ulpgrad::rsqrt_max_ulp},
+    {"sigmoid", [](float x) { return ulpgrad::sigmoid(x); }, ulpgrad::sigmoid_max_ulp},
+    {"silu", [](float x) { return ulpgrad::silu(x); }, ulpgrad::silu_max_ulp},
     {"tanh", [](float x) { return ulpgrad::tanh(x); }, ulpgrad::tanh_max_ulp},
 };
 
@@ -88,7 +92,9 @@ __global__ void apply(const float* x, float* y, int n) {
         y[3 * n + i] = ulpgrad::log2(x[i]);
         y[4 * n + i] = ulpgrad::log1p(x[i]);
         y[5 * n + i] = ulpgrad::rsqrt(x[i]);
-        y[6 * n + i] = ulpgrad::tanh(x[i]);
+        y[6 * n + i] = ulpgrad::sigmoid(x[i]);
+        y[7 * n + i] = ulpgrad::silu(x[i]);
+        y[8 * n + i] = ulpgrad::tanh(x[i]);
     }
 }
 
@@ -187,7 +193,7 @@ int main(int argc, char** argv) {
     if (argc != 2) {
         std::fprintf(stderr,
                      "usage: %s <reference-dir>\n"
-                     "  <reference-dir> is the directory holding the seven golden CSVs,\n"
+                     "  <reference-dir> is the directory holding the golden CSVs,\n"
                      "  for example data/reference or ..\\..\\data\\reference\n",
                      argv[0]);
         return 1;
@@ -204,7 +210,7 @@ int main(int argc, char** argv) {
     long long golden_points = 0;
 
     // One golden file at a time: every function is evaluated on that file's
-    // inputs, so parity is checked on the union of the seven samples (each
+    // inputs, so parity is checked on the union of the samples (each
     // sample has its own domain, and a function is as worth checking on the
     // points of its neighbours as on its own), while the bound is checked only
     // against the file that belongs to the function.

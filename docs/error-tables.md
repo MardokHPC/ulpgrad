@@ -8,7 +8,7 @@ the numbers move together, or they do not move at all.
 
 | step | file |
 |---|---|
-| golden reference | `data/reference/exp.csv`, `data/reference/exp2.csv`, `data/reference/log.csv`, `data/reference/log1p.csv`, `data/reference/log2.csv`, `data/reference/rsqrt.csv`, `data/reference/tanh.csv` |
+| golden reference | `data/reference/exp.csv`, `data/reference/exp2.csv`, `data/reference/log.csv`, `data/reference/log1p.csv`, `data/reference/log2.csv`, `data/reference/rsqrt.csv`, `data/reference/sigmoid.csv`, `data/reference/silu.csv`, `data/reference/tanh.csv` |
 | reference arithmetic | `experiments/m3_fit/gen_golden.py`, mpmath at 40 digits, direct RNE |
 | the run being measured | `tools/measure_bounds.cpp`, this build |
 | measured numbers | `data/error-bounds.json` |
@@ -19,7 +19,7 @@ the numbers move together, or they do not move at all.
 
 | item | value |
 |---|---|
-| date | Nov 15 2026 |
+| date | Nov 16 2026 |
 | OS / arch | Windows / x64 |
 | CPU | Intel64 Family 6 Model 158 Stepping 10, GenuineIntel |
 | compiler | MSVC 35229 |
@@ -208,6 +208,66 @@ The rounding of the reference is done on the significand, never through
 | [64, inf) | 4,491 | 1 | 87.46 % |
 
 The maximum is 1 ULP in the worst bucket and 1 ULP overall: the error
+does not grow with the argument.
+The rounding of the reference is done on the significand, never through
+`double`, which would round twice and disagree on exact ties.
+
+## `sigmoid`
+
+| metric | value |
+|---|---|
+| points in the golden file | 6,995 |
+| points carrying a ULP distance | 6,992 |
+| NaN inputs, checked bit for bit | 3 (0 mismatches) |
+| NaN results for a real argument | 0 |
+| **max ULP** | **2** |
+| exactly rounded | 76.36 % |
+| worst input | `0xC12A8187` |
+| reference | mpmath 1.4.1 at 40 decimal digits, direct round-to-nearest-even to float32 |
+| sample seed | `0x5EED0003` |
+
+| `\|x\|` | points | max ULP | exactly rounded |
+|---|---:|---:|---:|
+| [0, 1) | 2,465 | 1 | 94.20 % |
+| [1, 2) | 206 | 1 | 68.45 % |
+| [2, 4) | 395 | 1 | 60.25 % |
+| [4, 8) | 791 | 2 | 55.50 % |
+| [8, 16) | 1,598 | 2 | 54.26 % |
+| [16, 32) | 445 | 1 | 54.83 % |
+| [32, 64) | 8 | 0 | 100.00 % |
+| [64, inf) | 1,084 | 1 | 99.63 % |
+
+The maximum is 2 ULP in the worst bucket and 2 ULP overall: the error
+does not grow with the argument.
+The rounding of the reference is done on the significand, never through
+`double`, which would round twice and disagree on exact ties.
+
+## `silu`
+
+| metric | value |
+|---|---|
+| points in the golden file | 6,995 |
+| points carrying a ULP distance | 6,992 |
+| NaN inputs, checked bit for bit | 3 (0 mismatches) |
+| NaN results for a real argument | 0 |
+| **max ULP** | **2** |
+| exactly rounded | 80.01 % |
+| worst input | `0xC18C0C91` |
+| reference | mpmath 1.4.1 at 40 decimal digits, direct round-to-nearest-even to float32 |
+| sample seed | `0x5EED0003` |
+
+| `\|x\|` | points | max ULP | exactly rounded |
+|---|---:|---:|---:|
+| [0, 1) | 2,465 | 2 | 86.09 % |
+| [1, 2) | 206 | 1 | 73.30 % |
+| [2, 4) | 395 | 1 | 67.34 % |
+| [4, 8) | 791 | 1 | 68.02 % |
+| [8, 16) | 1,598 | 1 | 67.27 % |
+| [16, 32) | 445 | 2 | 78.88 % |
+| [32, 64) | 8 | 0 | 100.00 % |
+| [64, inf) | 1,084 | 1 | 99.91 % |
+
+The maximum is 2 ULP in the worst bucket and 2 ULP overall: the error
 does not grow with the argument.
 The rounding of the reference is done on the significand, never through
 `double`, which would round twice and disagree on exact ties.

@@ -273,7 +273,8 @@ TEST(TableFreshness, MeasuredJsonNamesEveryShippedFunction) {
     std::string error;
     const std::vector<ParsedFunction> functions = load(&error);
     ASSERT_TRUE(error.empty()) << error;
-    const char* expected[] = {"exp", "exp2", "log", "log1p", "log2", "rsqrt", "tanh"};
+    const char* expected[] = {"exp", "exp2", "log", "log1p", "log2", "rsqrt", "sigmoid", "silu",
+                              "tanh"};
     for (const char* name : expected) {
         const ParsedFunction* function = find(functions, name);
         ASSERT_NE(function, nullptr) << "data/error-bounds.json has no " << name << " entry";
@@ -363,6 +364,30 @@ TEST(TableFreshness, RsqrtBoundsMatchTheMeasuredJson) {
     SCOPED_TRACE("rsqrt");
     expect_matches(*function, ulpgrad::rsqrt_error_bounds, ulpgrad::rsqrt_error_bounds_count,
                    ulpgrad::rsqrt_max_ulp);
+}
+
+TEST(TableFreshness, SigmoidBoundsMatchTheMeasuredJson) {
+    std::string error;
+    const std::vector<ParsedFunction> functions = load(&error);
+    ASSERT_TRUE(error.empty()) << error;
+    const ParsedFunction* function = find(functions, "sigmoid");
+    ASSERT_NE(function, nullptr) << "data/error-bounds.json has no sigmoid entry";
+
+    SCOPED_TRACE("sigmoid");
+    expect_matches(*function, ulpgrad::sigmoid_error_bounds, ulpgrad::sigmoid_error_bounds_count,
+                   ulpgrad::sigmoid_max_ulp);
+}
+
+TEST(TableFreshness, SiluBoundsMatchTheMeasuredJson) {
+    std::string error;
+    const std::vector<ParsedFunction> functions = load(&error);
+    ASSERT_TRUE(error.empty()) << error;
+    const ParsedFunction* function = find(functions, "silu");
+    ASSERT_NE(function, nullptr) << "data/error-bounds.json has no silu entry";
+
+    SCOPED_TRACE("silu");
+    expect_matches(*function, ulpgrad::silu_error_bounds, ulpgrad::silu_error_bounds_count,
+                   ulpgrad::silu_max_ulp);
 }
 
 TEST(TableFreshness, ReadmeBenchmarksMatchTheCommittedSnapshot) {

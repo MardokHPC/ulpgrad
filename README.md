@@ -16,10 +16,11 @@ on the CPU and on the GPU, it has no link dependencies, and the accuracy claim i
 a sentence in a README.
 
 > **Status: v0.1.0.** `exp` and `exp2` are in `ulpgrad/exp.h`, `rsqrt` in
-> `ulpgrad/rsqrt.h`, `log`, `log2`, `log1p` in `ulpgrad/log.h`, and `tanh` in `ulpgrad/tanh.h`, with
-> the declared bounds in `ulpgrad/tables.h` and the table in
-> [`docs/error-tables.md`](docs/error-tables.md), both generated from one measurement against a
-> committed golden reference. `erf`, `expm1` and `sigmoid` are not in this release.
+> `ulpgrad/rsqrt.h`, `log`, `log2`, `log1p` in `ulpgrad/log.h`, `tanh` in `ulpgrad/tanh.h`, and
+> `sigmoid` and `silu` in `ulpgrad/sigmoid.h` and `ulpgrad/silu.h`, with the declared bounds in
+> `ulpgrad/tables.h` and the table in [`docs/error-tables.md`](docs/error-tables.md), both generated
+> from one measurement against a committed golden reference. `erf` and `expm1` are not in this
+> release.
 
 ## When to use it
 
@@ -35,6 +36,11 @@ a sentence in a README.
 idea what it costs you" and "adopt an entire math library for two functions": a small header with a
 bound you can state in a review, that CI refuses to let drift, and that survives the compiler flags CUDA
 turns on by default — which is where `libdevice`'s own `expf` does not.
+
+The two activations sit next to `exp` rather than in a header of their own because they are thin:
+`silu` is `x*sigmoid(x)`, and `softmax` needs no function at all — per element it is
+`exp2((x - max) * log2 e)`, built from `exp2` with the max subtraction left to the caller and the one
+multiply by `log2 e` as the only extra rounding.
 
 ## Prerequisites
 
@@ -59,6 +65,8 @@ ctest --test-dir build --output-on-failure
 #include <ulpgrad/exp.h>
 #include <ulpgrad/log.h>
 #include <ulpgrad/rsqrt.h>
+#include <ulpgrad/sigmoid.h>
+#include <ulpgrad/silu.h>
 #include <ulpgrad/tanh.h>
 
 float y = ulpgrad::exp(x);      // one function, one bound: 1 ULP flat, host and device
@@ -66,6 +74,8 @@ float z = ulpgrad::exp2(k);     // the binary one: reduction is exact, so the sa
 float r = ulpgrad::rsqrt(x);    // no division, no SFU: three Newton steps on an even exponent
 float l = ulpgrad::log1p(x);    // the one to use for log(1 + x): 1e-30 comes back exact
 float t = ulpgrad::tanh(x);     // polynomial below 0.5, one exp2 and one division above it
+float s = ulpgrad::sigmoid(x);  // 1/(1+e^-x): two branches, so the negative tail never overflows
+float u = ulpgrad::silu(x);     // x*sigmoid(x), the tail scaled once so its subnormal stays tight
 ```
 
 ## Integration
@@ -106,11 +116,13 @@ target_link_libraries(my_target PRIVATE ulpgrad::ulpgrad)
 | `ulpgrad/config.h` | `ULPGRAD_HD`, `ULPGRAD_FMA`, `ULPGRAD_FORCE_INLINE` | done |
 | `ulpgrad/detail/bits.h` | `ulp_distance`, `scale_by_pow2`, bit casts | done |
 | `ulpgrad/detail/coefficients.h` | minimax coefficients, hex pattern next to each | generated |
-| `ulpgrad/tables.h` | `exp_max_ulp`, `exp2_max_ulp`, `rsqrt_max_ulp`, `log_max_ulp`, `log2_max_ulp`, `log1p_max_ulp`, `tanh_max_ulp`, per-bucket `ErrorBound` rows | generated |
+| `ulpgrad/tables.h` | `exp_max_ulp`, `exp2_max_ulp`, `rsqrt_max_ulp`, `log_max_ulp`, `log2_max_ulp`, `log1p_max_ulp`, `tanh_max_ulp`, `sigmoid_max_ulp`, `silu_max_ulp`, per-bucket `ErrorBound` rows | generated |
 | `ulpgrad/exp.h` | `exp`, `exp2` | done; `expm1` not shipped |
 | `ulpgrad/log.h` | `log`, `log2`, `log1p` — one reduction, one atanh series, two fits | done |
 | `ulpgrad/rsqrt.h` | `rsqrt` (bit-trick estimate + three Newton steps, no SFU) | done |
-| `ulpgrad/tanh.h` | `tanh` — odd polynomial below 0.5, `(u-1)/(u+1)` above | done; `sigmoid` not shipped |
+| `ulpgrad/tanh.h` | `tanh` — odd polynomial below 0.5, `(u-1)/(u+1)` above | done |
+| `ulpgrad/sigmoid.h` | `sigmoid` — `1/(1+e^-x)`, two branches so the tail does not overflow | done |
+| `ulpgrad/silu.h` | `silu` — `x·sigmoid(x)`, the tail scaled once so the subnormal stays tight | done |
 | `ulpgrad/detail/poly.h` | FMA-only polynomial evaluation | not built: a 7-line Horner chain in each function beats a header |
 | `ulpgrad/pow.h` | `pow`, with the full IEEE special-case table | M6 |
 | `ulpgrad/erf.h` | `erf`, `erfc` | v1.1 |
@@ -131,6 +143,8 @@ reference in `data/reference/`. `ulpgrad::exp_max_ulp`, `ulpgrad::exp2_max_ulp` 
 | `log1p` | 7,005 | **1** | 92.93 % | 1 |
 | `log2` | 7,969 | **1** | 93.84 % | 1 |
 | `rsqrt` | 7,829 | **1** | 88.22 % | 1 |
+| `sigmoid` | 6,992 | **2** | 76.36 % | 2 |
+| `silu` | 6,992 | **2** | 80.01 % | 2 |
 | `tanh` | 7,230 | **2** | 88.02 % | 2 |
 
 Side by side with the incumbent (`libdevice` figures are the ones NVIDIA documents in the CUDA Math
@@ -284,10 +298,12 @@ Full write-ups: [`m0_exp/REPORT.md` §10](experiments/m0_exp/REPORT.md) and
   doing so needs a compensated quotient, i.e. a second division in the hottest function of the
   header. The other half ULP, the one the rounded denominator used to cost, is recovered and paid
   back for four operations.
-- **`tanh` is 2 ULP above 0.5, and `sigmoid` is not shipped.** The 2 comes from the `exp2` it is
-  built on, not from its polynomial, which is at 1 ULP. `0.5 * (1 + tanh(x/2))` would add another
-  cancellation on top of that, so `sigmoid` needs its own fit and its own bound rather than a wrapper
-  -- and until then it is declared missing, which is cheaper to defend than a wrapper with no number.
+- **`tanh`, `sigmoid` and `silu` are 2 ULP.** For `tanh` the 2 comes from the `exp2` it is built
+  on, not from its polynomial, which is at 1 ULP. `sigmoid` spends its budget in the one division of
+  `1/(1+e^-x)`; folding it into `tanh` as `0.5*(1+tanh(x/2))` would add a cancellation on top instead
+  of removing one. `silu` is `x·sigmoid(x)`; its deep negative tail applies `|x|` before the power of
+  two, so the subnormal result is rounded once — that is the difference between the 2 declared and the
+  ~50 a naive `x·exp(x)` measures.
 - **Nothing is exhaustive.** The sample is stratified, not complete; the only exhaustive parts are the
   `rsqrt` mantissa sweep, the subnormal-output sweep and the reasoning about the `2^-126` boundary. A
   different GPU, a different CUDA version or a different compiler may move the numbers, and the
@@ -299,9 +315,11 @@ Full write-ups: [`m0_exp/REPORT.md` §10](experiments/m0_exp/REPORT.md) and
 ulpgrad/
 ├── include/ulpgrad/
 │   ├── config.h              # ULPGRAD_HD, ULPGRAD_FMA, ULPGRAD_FORCE_INLINE
-│   ├── exp.h                 # exp, exp2
+│   ├── exp.h                 # exp, exp2, exp_times (detail)
 │   ├── log.h                 # log, log2, log1p
 │   ├── rsqrt.h               # rsqrt
+│   ├── sigmoid.h             # sigmoid
+│   ├── silu.h                # silu
 │   ├── tables.h              # generated: declared bounds, readable from code
 │   ├── tanh.h                # tanh
 │   └── detail/
@@ -327,6 +345,7 @@ ulpgrad/
 │   ├── test_log.cpp
 │   ├── test_rsqrt.cpp
 │   ├── test_tanh.cpp
+│   ├── test_sigmoid_silu.cpp
 │   ├── test_special_cases.cpp
 │   ├── test_table_freshness.cpp
 │   └── device/

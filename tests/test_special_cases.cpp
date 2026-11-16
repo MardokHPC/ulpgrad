@@ -1,6 +1,8 @@
 #include <ulpgrad/exp.h>
 #include <ulpgrad/log.h>
 #include <ulpgrad/rsqrt.h>
+#include <ulpgrad/sigmoid.h>
+#include <ulpgrad/silu.h>
 #include <ulpgrad/tables.h>
 #include <ulpgrad/tanh.h>
 #include <ulpgrad/detail/bits.h>
@@ -30,6 +32,8 @@ static_assert(noexcept(ulpgrad::log(1.0f)), "log cannot fail, so it cannot throw
 static_assert(noexcept(ulpgrad::log2(1.0f)), "log2 cannot fail, so it cannot throw");
 static_assert(noexcept(ulpgrad::log1p(1.0f)), "log1p cannot fail, so it cannot throw");
 static_assert(noexcept(ulpgrad::tanh(1.0f)), "tanh cannot fail, so it cannot throw");
+static_assert(noexcept(ulpgrad::sigmoid(1.0f)), "sigmoid cannot fail, so it cannot throw");
+static_assert(noexcept(ulpgrad::silu(1.0f)), "silu cannot fail, so it cannot throw");
 
 float from_bits(std::uint32_t bits) { return ulpgrad::detail::bit_pattern_to_float(bits); }
 
@@ -68,6 +72,8 @@ TEST(SpecialCases, NanReturnsItsOwnPayloadFromBothFunctions) {
         expect_bits(ulpgrad::log2(from_bits(bits)), bits);
         expect_bits(ulpgrad::log1p(from_bits(bits)), bits);
         expect_bits(ulpgrad::tanh(from_bits(bits)), bits);
+        expect_bits(ulpgrad::sigmoid(from_bits(bits)), bits);
+        expect_bits(ulpgrad::silu(from_bits(bits)), bits);
     }
 }
 
@@ -351,4 +357,40 @@ TEST(Tanh, IsBoundedByOne) {
         EXPECT_LE(value, 1.0f) << "x = " << x;
         EXPECT_GE(value, -1.0f) << "x = " << x;
     }
+}
+
+// ----------------------------------------------------------------------------- //
+// Sigmoid and Silu
+// ----------------------------------------------------------------------------- //
+
+TEST(Sigmoid, ZerosAreOneHalfAndInfinitiesSaturate) {
+    expect_bits(ulpgrad::sigmoid(0.0f), 0x3F000000u);                 // 0.5
+    expect_bits(ulpgrad::sigmoid(from_bits(kNegZero)), 0x3F000000u);  // 0.5, no sign leak
+    expect_bits(ulpgrad::sigmoid(from_bits(kPosInf)), kOne);
+    expect_bits(ulpgrad::sigmoid(from_bits(kNegInf)), kPosZero);
+}
+
+TEST(Sigmoid, StaysInsideTheUnitInterval) {
+    // The branch structure has to keep the result in [0, 1]; a wrong sign in the
+    // negative branch would show up as a value outside it.
+    for (std::uint32_t bits = 0x00000001u; bits < 0x7F7FFFFFu; bits = bits * 3u + 7u) {
+        const float value = ulpgrad::sigmoid(from_bits(bits));
+        EXPECT_LE(value, 1.0f) << "x = " << from_bits(bits);
+        EXPECT_GE(value, 0.0f) << "x = " << from_bits(bits);
+    }
+}
+
+TEST(Silu, ZerosKeepTheirSignAndInfinitiesFollowTheLimit) {
+    expect_bits(ulpgrad::silu(0.0f), kPosZero);
+    expect_bits(ulpgrad::silu(from_bits(kNegZero)), kNegZero);
+    expect_bits(ulpgrad::silu(from_bits(kPosInf)), kPosInf);
+    // silu(-inf) is the limit of x*sigmoid(x): a negative zero, not -inf*0 = NaN.
+    expect_bits(ulpgrad::silu(from_bits(kNegInf)), kNegZero);
+}
+
+TEST(Silu, DeepNegativeTailRoundsToNegativeZero) {
+    // Below about -104 the magnitude falls under half the smallest subnormal, and
+    // the sign still has to be the argument's.
+    expect_bits(ulpgrad::silu(-200.0f), kNegZero);
+    expect_bits(ulpgrad::silu(from_bits(kLargestFinite | 0x80000000u)), kNegZero);
 }

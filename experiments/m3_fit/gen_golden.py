@@ -136,6 +136,30 @@ def ref_log1p(x):
     return mpmath.log1p(mpmath.mpf(x))
 
 
+def ref_sigmoid(x):
+    """1/(1+e^-x): 0 at -inf, 1 at +inf.
+
+    A huge `e^-x` is fine here -- mpmath carries an arbitrary exponent, so the
+    quotient comes back as a correctly rounded subnormal or zero, not as an
+    overflow to infinity.
+    """
+    return 1 / (1 + mpmath.exp(-mpmath.mpf(x)))
+
+
+def ref_silu(x):
+    """x*sigmoid(x): -0 at -inf, +inf at +inf, the sign of a zero preserved.
+
+    `-inf` is the one place `x*sigmoid(x)` is not `x/(1+e^-x)`: the latter is
+    `-inf/+inf`, which is a NaN, while the limit is a negative zero. And mpmath
+    has no signed zero, so `+-0` is returned as the float itself.
+    """
+    if x == float('-inf'):
+        return -0.0
+    if x == 0.0:
+        return x
+    return mpmath.mpf(x) / (1 + mpmath.exp(-mpmath.mpf(x)))
+
+
 # --------------------------------------------------------------------------- #
 # samples
 # --------------------------------------------------------------------------- #
@@ -447,6 +471,42 @@ def tanh_sample(seed, uniform_dense, uniform_wide, subnormal_points):
     ]
 
 
+def sigmoid_borders():
+    """Zero, the saturation edges, and the entries where the exponential flips."""
+    out = []
+    out.extend(around(0x00000000, 8))       # sigmoid(0) = 0.5, the sign must not leak
+    out.extend(around(0x80000000, 8))
+    # |x| above ~17 rounds sigmoid to exactly 1 or 0; below -88 the naive form
+    # would overflow, which is exactly what the two-branch implementation avoids.
+    for value in (1.0, 8.0, 15.0, 16.0, 17.0, 20.0, 88.0, 89.0, 100.0):
+        base = int(np.float32(value).view(np.uint32))
+        out.extend(around(base, 4))
+        out.extend(around(base | 0x80000000, 4))
+    for exponent in range(1, 31):
+        value = int(np.float32(2.0 ** -exponent).view(np.uint32))
+        out.extend(around(value, 2))
+        out.extend(around(value | 0x80000000, 2))
+    out.extend(around(F32_MIN_SUB, 4))
+    out.extend(around(F32_MAX, 4))
+    return dedupe(out)
+
+
+def sigmoid_sample(seed, uniform_dense, uniform_wide, subnormal_points):
+    """Shared by `sigmoid` and `silu`: same domain, different reference."""
+    rng = np.random.default_rng(seed)
+    dense = rng.uniform(-18.0, 18.0, uniform_dense).astype(np.float32)
+    signs = rng.choice([-1.0, 1.0], uniform_wide).astype(np.float32)
+    magnitudes = np.exp(rng.uniform(np.log(1e-38), np.log(1e30), uniform_wide))
+    wide = (signs * magnitudes).astype(np.float32)
+    return [
+        ('uniform', dense.view(np.uint32)),
+        ('wide', wide.view(np.uint32)),
+        ('borders', sigmoid_borders()),
+        ('subnormal', subnormal_bits(subnormal_points, seed ^ 0x51ED270B)),
+        ('specials', special_bits()),
+    ]
+
+
 FUNCTIONS = {
     'exp': (ref_exp, exp_sample),
     'exp2': (ref_exp2, exp2_sample),
@@ -454,6 +514,8 @@ FUNCTIONS = {
     'log1p': (ref_log1p, log1p_sample),
     'log2': (ref_log2, log_sample),
     'rsqrt': (ref_rsqrt, rsqrt_sample),
+    'sigmoid': (ref_sigmoid, sigmoid_sample),
+    'silu': (ref_silu, sigmoid_sample),
     'tanh': (ref_tanh, tanh_sample),
 }
 

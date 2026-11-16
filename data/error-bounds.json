@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "generated_by": "tools/measure_bounds.cpp",
-  "date": "Nov 15 2026",
+  "date": "Nov 16 2026",
   "machine": {
     "os": "Windows",
     "arch": "x64",
@@ -145,6 +145,52 @@
         {"range": "[16, 32)", "max_ulp": 1, "points": 554, "exactly_rounded_pct": 85.02, "worst_input": "0x41E11591"},
         {"range": "[32, 64)", "max_ulp": 1, "points": 1119, "exactly_rounded_pct": 88.65, "worst_input": "0x4275B3EF"},
         {"range": "[64, inf)", "max_ulp": 1, "points": 4491, "exactly_rounded_pct": 87.46, "worst_input": "0x42AD34FE"}
+      ]
+    },
+    {
+      "name": "sigmoid",
+      "reference": "mpmath 1.4.1 at 40 decimal digits, direct round-to-nearest-even to float32",
+      "seed": "0x5EED0003",
+      "points": 6995,
+      "measured_points": 6992,
+      "nan_inputs": 3,
+      "nan_outputs": 0,
+      "nan_mismatches": 0,
+      "max_ulp": 2,
+      "worst_input": "0xC12A8187",
+      "exactly_rounded_pct": 76.36,
+      "buckets": [
+        {"range": "[0, 1)", "max_ulp": 1, "points": 2465, "exactly_rounded_pct": 94.20, "worst_input": "0x3E9A1631"},
+        {"range": "[1, 2)", "max_ulp": 1, "points": 206, "exactly_rounded_pct": 68.45, "worst_input": "0x3F8B0E77"},
+        {"range": "[2, 4)", "max_ulp": 1, "points": 395, "exactly_rounded_pct": 60.25, "worst_input": "0xC07EF6A6"},
+        {"range": "[4, 8)", "max_ulp": 2, "points": 791, "exactly_rounded_pct": 55.50, "worst_input": "0xC0D1FEB9"},
+        {"range": "[8, 16)", "max_ulp": 2, "points": 1598, "exactly_rounded_pct": 54.26, "worst_input": "0xC12A8187"},
+        {"range": "[16, 32)", "max_ulp": 1, "points": 445, "exactly_rounded_pct": 54.83, "worst_input": "0x4186AE8B"},
+        {"range": "[32, 64)", "max_ulp": 0, "points": 8, "exactly_rounded_pct": 100.00, "worst_input": "0x00000000"},
+        {"range": "[64, inf)", "max_ulp": 1, "points": 1084, "exactly_rounded_pct": 99.63, "worst_input": "0xC2AFFFFF"}
+      ]
+    },
+    {
+      "name": "silu",
+      "reference": "mpmath 1.4.1 at 40 decimal digits, direct round-to-nearest-even to float32",
+      "seed": "0x5EED0003",
+      "points": 6995,
+      "measured_points": 6992,
+      "nan_inputs": 3,
+      "nan_outputs": 0,
+      "nan_mismatches": 0,
+      "max_ulp": 2,
+      "worst_input": "0xC18C0C91",
+      "exactly_rounded_pct": 80.01,
+      "buckets": [
+        {"range": "[0, 1)", "max_ulp": 2, "points": 2465, "exactly_rounded_pct": 86.09, "worst_input": "0xB6743C72"},
+        {"range": "[1, 2)", "max_ulp": 1, "points": 206, "exactly_rounded_pct": 73.30, "worst_input": "0x3F8B0E77"},
+        {"range": "[2, 4)", "max_ulp": 1, "points": 395, "exactly_rounded_pct": 67.34, "worst_input": "0x403CBF0A"},
+        {"range": "[4, 8)", "max_ulp": 1, "points": 791, "exactly_rounded_pct": 68.02, "worst_input": "0x4081C8EF"},
+        {"range": "[8, 16)", "max_ulp": 1, "points": 1598, "exactly_rounded_pct": 67.27, "worst_input": "0xC14F54F5"},
+        {"range": "[16, 32)", "max_ulp": 2, "points": 445, "exactly_rounded_pct": 78.88, "worst_input": "0xC18C0C91"},
+        {"range": "[32, 64)", "max_ulp": 0, "points": 8, "exactly_rounded_pct": 100.00, "worst_input": "0x00000000"},
+        {"range": "[64, inf)", "max_ulp": 1, "points": 1084, "exactly_rounded_pct": 99.91, "worst_input": "0xC2B00001"}
       ]
     },
     {

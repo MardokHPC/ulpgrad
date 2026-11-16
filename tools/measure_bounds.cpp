@@ -23,6 +23,8 @@
 #include "ulpgrad/exp.h"
 #include "ulpgrad/log.h"
 #include "ulpgrad/rsqrt.h"
+#include "ulpgrad/sigmoid.h"
+#include "ulpgrad/silu.h"
 #include "ulpgrad/tanh.h"
 #include "ulpgrad/detail/bits.h"
 
@@ -54,6 +56,8 @@ constexpr struct {
     {"log1p", [](float x) { return ulpgrad::log1p(x); }},
     {"log2", [](float x) { return ulpgrad::log2(x); }},
     {"rsqrt", [](float x) { return ulpgrad::rsqrt(x); }},
+    {"sigmoid", [](float x) { return ulpgrad::sigmoid(x); }},
+    {"silu", [](float x) { return ulpgrad::silu(x); }},
     {"tanh", [](float x) { return ulpgrad::tanh(x); }},
 };
 

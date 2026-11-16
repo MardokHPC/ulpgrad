@@ -17,6 +17,26 @@ namespace detail {
 #endif
 }
 
+// factor * e^x, with factor folded in before the power-of-two scaling so the
+// result is rounded once. x must be finite and out of the overflow range; the
+// caller's NaN and range guards run first.
+[[nodiscard]] ULPGRAD_HD inline float exp_times(float x, float factor) noexcept {
+    const float kf = round_to_nearest_even(x * exp_coeffs::inv_ln2);
+    float r = ULPGRAD_FMA(-kf, exp_coeffs::ln2_hi, x);
+    r = ULPGRAD_FMA(-kf, exp_coeffs::ln2_lo, r);
+
+    float p = exp_coeffs::c6;
+    p = ULPGRAD_FMA(p, r, exp_coeffs::c5);
+    p = ULPGRAD_FMA(p, r, exp_coeffs::c4);
+    p = ULPGRAD_FMA(p, r, exp_coeffs::c3);
+    p = ULPGRAD_FMA(p, r, exp_coeffs::c2);
+    p = ULPGRAD_FMA(p, r, exp_coeffs::c1);
+    p = ULPGRAD_FMA(p, r, exp_coeffs::c0);
+    const float y = ULPGRAD_FMA(p, r, 1.0f);
+
+    return scale_by_pow2(factor * y, static_cast<int>(kf));
+}
+
 }  // namespace detail
 
 // e^x, rounded to nearest; +inf above the overflow threshold, +0 below underflow.
