@@ -122,6 +122,7 @@ if(ULPGRAD_BUILD_TESTS)
         # the working directory ctest happens to use.
         target_compile_definitions(${name} PRIVATE
             ULPGRAD_TEST_DATA_DIR="${PROJECT_SOURCE_DIR}/data"
+            ULPGRAD_SOURCE_DIR="${PROJECT_SOURCE_DIR}"
         )
         set_target_properties(${name} PROPERTIES
             CXX_STANDARD 17

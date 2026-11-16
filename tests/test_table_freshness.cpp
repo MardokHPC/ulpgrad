@@ -141,6 +141,128 @@ const ParsedFunction* find(const std::vector<ParsedFunction>& functions, const c
     return nullptr;
 }
 
+// ----------------------------------------------------------------------------- //
+// Benchmarks
+// ----------------------------------------------------------------------------- //
+
+// The README benchmark table is generated from data/benchmarks.json, so the
+// numbers a reader sees are the committed measurement and not a hand copy of
+// the report. This reads both and compares them row by row.
+
+double number_after(const std::string& line, const char* key) {
+    const std::size_t at = line.find(key);
+    if (at == std::string::npos) {
+        return -1.0;
+    }
+    const char* digits = line.c_str() + at + std::strlen(key);
+    char* end = nullptr;
+    const double value = std::strtod(digits, &end);
+    return end == digits ? -1.0 : value;
+}
+
+std::string trim(const std::string& text) {
+    const std::size_t first = text.find_first_not_of(" \t");
+    if (first == std::string::npos) {
+        return std::string();
+    }
+    const std::size_t last = text.find_last_not_of(" \t");
+    return text.substr(first, last - first + 1);
+}
+
+struct BenchRow {
+    double ulpgrad = 0.0;
+    double libdevice = 0.0;
+    double expf = 0.0;
+};
+
+std::vector<BenchRow> read_benchmarks(std::string* error) {
+    const std::string path = std::string(ULPGRAD_TEST_DATA_DIR) + "/benchmarks.json";
+    std::vector<BenchRow> rows;
+    std::ifstream stream(path);
+    if (!stream) {
+        *error = "cannot open " + path;
+        return rows;
+    }
+    std::string line;
+    while (std::getline(stream, line)) {
+        if (line.find("\"shape\"") == std::string::npos) {
+            continue;
+        }
+        BenchRow row;
+        row.ulpgrad = number_after(line, "\"ulpgrad\": ");
+        row.libdevice = number_after(line, "\"libdevice\": ");
+        row.expf = number_after(line, "\"expf\": ");
+        if (row.ulpgrad < 0.0 || row.libdevice < 0.0 || row.expf < 0.0) {
+            *error = "malformed row in " + path + ": '" + line + "'";
+            return std::vector<BenchRow>();
+        }
+        rows.push_back(row);
+    }
+    return rows;
+}
+
+std::vector<BenchRow> read_readme_benchmarks(std::string* error) {
+    const std::string path = std::string(ULPGRAD_SOURCE_DIR) + "/README.md";
+    std::ifstream stream(path);
+    if (!stream) {
+        *error = "cannot open " + path;
+        return std::vector<BenchRow>();
+    }
+    std::vector<BenchRow> rows;
+    std::string line;
+    bool inside = false;
+    bool seen_header = false;
+    while (std::getline(stream, line)) {
+        if (!line.empty() && line.back() == '\r') {
+            line.pop_back();
+        }
+        if (line.find("<!-- BEGIN benchmarks") != std::string::npos) {
+            inside = true;
+            seen_header = false;
+            continue;
+        }
+        if (line.find("<!-- END benchmarks") != std::string::npos) {
+            inside = false;
+            continue;
+        }
+        if (!inside || line.empty() || line[0] != '|') {
+            continue;
+        }
+        if (!seen_header) {
+            seen_header = true;  // "| Kernel shape | ulpgrad | ... |"
+            continue;
+        }
+        if (line.find("---") != std::string::npos) {
+            continue;  // "|---|---|---|---|"
+        }
+
+        std::vector<std::string> cells;
+        std::size_t from = 0;
+        while (from <= line.size()) {
+            const std::size_t bar = line.find('|', from);
+            const std::size_t stop = (bar == std::string::npos) ? line.size() : bar;
+            cells.push_back(trim(line.substr(from, stop - from)));
+            if (bar == std::string::npos) {
+                break;
+            }
+            from = bar + 1;
+        }
+        if (cells.size() < 5) {
+            *error = "benchmark row has too few cells: '" + line + "'";
+            return std::vector<BenchRow>();
+        }
+        BenchRow row;
+        row.ulpgrad = std::strtod(cells[2].c_str(), nullptr);
+        row.libdevice = std::strtod(cells[3].c_str(), nullptr);
+        row.expf = std::strtod(cells[4].c_str(), nullptr);
+        rows.push_back(row);
+    }
+    if (rows.empty()) {
+        *error = "no benchmark rows between the README markers";
+    }
+    return rows;
+}
+
 }  // namespace
 
 // ----------------------------------------------------------------------------- //
@@ -241,4 +363,21 @@ TEST(TableFreshness, RsqrtBoundsMatchTheMeasuredJson) {
     SCOPED_TRACE("rsqrt");
     expect_matches(*function, ulpgrad::rsqrt_error_bounds, ulpgrad::rsqrt_error_bounds_count,
                    ulpgrad::rsqrt_max_ulp);
+}
+
+TEST(TableFreshness, ReadmeBenchmarksMatchTheCommittedSnapshot) {
+    std::string error;
+    const std::vector<BenchRow> measured = read_benchmarks(&error);
+    ASSERT_TRUE(error.empty()) << error;
+    const std::vector<BenchRow> printed = read_readme_benchmarks(&error);
+    ASSERT_TRUE(error.empty()) << error;
+
+    ASSERT_EQ(measured.size(), printed.size())
+        << "the README table and data/benchmarks.json have different row counts";
+    for (std::size_t i = 0; i < measured.size(); ++i) {
+        EXPECT_NEAR(printed[i].ulpgrad, measured[i].ulpgrad, 0.05) << "row " << i << ": ulpgrad";
+        EXPECT_NEAR(printed[i].libdevice, measured[i].libdevice, 0.05)
+            << "row " << i << ": libdevice";
+        EXPECT_NEAR(printed[i].expf, measured[i].expf, 0.05) << "row " << i << ": __expf";
+    }
 }

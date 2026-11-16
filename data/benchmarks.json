@@ -1,0 +1,12 @@
+{
+  "schema": 1,
+  "source": "experiments/m0_gpu/REPORT.md",
+  "gpu": "RTX 2060 SUPER (sm_75)",
+  "cuda": "12.6",
+  "driver": "13.3",
+  "rows": [
+    {"shape": "DRAM-bound (67 MB in, 67 MB out), scalar", "ulpgrad": 98.8, "libdevice": 99.8, "expf": 100.0},
+    {"shape": "DRAM-bound, `float4`", "ulpgrad": 99.7, "libdevice": 100.0, "expf": 100.0},
+    {"shape": "L2-resident scalar ring, 128 repeats", "ulpgrad": 64.5, "libdevice": 100.1, "expf": 101.1}
+  ]
+}
