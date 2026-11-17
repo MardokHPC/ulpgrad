@@ -1,0 +1,61 @@
+name: GPU device check (simulated H100)
+
+# Optional, non-required check. The hosted runners have no GPU, so ci.yml only
+# compiles tests/device/exp_smoke.cu. This runs it on a simulated NVIDIA H100
+# (https://github.com/pantheongpu/pantheonsim): host against device bit parity and
+# device against the golden references, for every function. A simulator cannot
+# reproduce hardware-specific behavior or timing.
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - "include/**"
+      - "data/reference/**"
+      - "tests/device/**"
+      - ".github/workflows/gpu-sim.yml"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  device-check:
+    name: exp_smoke (CUDA 13.0, simulated H100)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+        with:
+          persist-credentials: false
+
+      - name: Set up the simulated GPU and CUDA toolkit
+        uses: pantheongpu/setup-pantheonsim@deff5781e8adfd83dec98dd5242dcbc96a564773 # v0.1.10
+        with:
+          gpu: nvidia/h100
+          cuda-toolkit: "13.0"
+
+      # The simulator runs PTX only (compute_90 embeds no SASS) and needs a
+      # shared CUDA runtime.
+      - name: Build exp_smoke
+        run: >
+          nvcc -arch=compute_90 -cudart shared -std=c++17 -O2 -I include
+          -o exp_smoke tests/device/exp_smoke.cu
+
+      # exp_smoke exits 77 when it finds no device, which ci.yml accepts. Here
+      # that is a failure, as is any simulator error or a missing PASS line.
+      - name: Run exp_smoke
+        run: |
+          set +e
+          vgpu run ./exp_smoke data/reference 2>&1 | tee out.txt
+          rc=${PIPESTATUS[0]}
+          set -e
+          echo "exit code: $rc"
+          test "$rc" -eq 0
+          ! grep -q 'VirtualGPU error' out.txt
+          ! grep -qi 'no CUDA device\|SKIPPED' out.txt
+          grep -q '^PASS: 9 of 9 functions' out.txt
